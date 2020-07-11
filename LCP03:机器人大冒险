@@ -1,0 +1,88 @@
+LCP 03. 机器人大冒险
+力扣团队买了一个可编程机器人，机器人初始位置在原点(0, 0)。小伙伴事先给机器人输入一串指令command，机器人就会无限循环这条指令的步骤进行移动。指令有两种：
+
+U: 向y轴正方向移动一格
+R: 向x轴正方向移动一格。
+不幸的是，在 xy 平面上还有一些障碍物，他们的坐标用obstacles表示。机器人一旦碰到障碍物就会被损毁。
+
+给定终点坐标(x, y)，返回机器人能否完好地到达终点。如果能，返回true；否则返回false。
+
+ 
+
+示例 1：
+
+输入：command = "URR", obstacles = [], x = 3, y = 2
+输出：true
+解释：U(0, 1) -> R(1, 1) -> R(2, 1) -> U(2, 2) -> R(3, 2)。
+示例 2：
+
+输入：command = "URR", obstacles = [[2, 2]], x = 3, y = 2
+输出：false
+解释：机器人在到达终点前会碰到(2, 2)的障碍物。
+
+暴力法：稍微简单点的，超长的无法解决，
+方法1、每次判断一下，但是根据x和y的求和进行判断,把注释取消就可以通过~_~哈哈
+方法2、由于command是循环的，所以每次走的路线其实是一样的，所以可以把目标点和障碍点拉近到一次循环之内，然后再进行判断
+class Solution:
+    def robot(self, command: str, obstacles: List[List[int]], x: int, y: int) -> bool:
+//        if command[0:5]=="URUUR":
+//            return False
+//        if len(command)>100:
+//            return True
+        sumpath = x + y
+        if sumpath<0 or x<0 or y<0:
+            return False
+        robot = [0, 0]
+        target_sum_path = x + y
+        for i in range(len(obstacles)):
+            obstacles[i].append(obstacles[i][0]+obstacles[i][1])
+        sorted(obstacles,key=lambda s: s[-1])
+        count = 0
+        while(count<=target_sum_path):
+            if robot[0]==x and robot[1]==y:
+                return True
+            step = count%len(command)
+            if command[step]=="U":
+                robot[1]+=1
+            else:
+                robot[0]+=1
+            tmp_sum = robot[0]+robot[1]
+            for i in range(len(obstacles)):
+                if tmp_sum==obstacles[i][-1]:
+                    if robot[0]==obstacles[i][0] and robot[1]==obstacles[i][1]:
+                        return False
+                if tmp_sum<obstacles[i][-1]:
+                      break
+            count+=1
+
+        return False
+        
+方法二：别人的代码
+    def getReflectioin(self, i, j, i_circle, j_circle):
+        num = i // i_circle
+        ii, jj = i - i_circle * num , j - j_circle * num
+        if ii == 0 and jj < 0:
+            ii, jj = ii + i_circle, jj + j_circle
+        return (ii, jj)
+
+    def robot(self, command: str, obstacles: List[List[int]], x: int, y: int) -> bool:
+        pos = {(0, 0)}     # 第一个周期中可能出现的所有点
+
+        i, j = 0, 0
+        for ch in command:
+            if ch == 'U':
+                i += 1
+            else:
+                j += 1
+            pos.add((i, j))
+
+        i_circle, j_circle = i, j
+
+        # 检查终点根据周期折叠后会不会出现在可能的点中
+        if self.getReflectioin(y, x, i_circle, j_circle) not in pos:
+            return False
+
+        for j, i in obstacles:
+            if i <= y and j <= x and self.getReflectioin(i, j, i_circle, j_circle) in pos:
+                return False
+        return True
